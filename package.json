@@ -1,0 +1,31 @@
+{
+  "name": "umi-plugin-alioss",
+  "version": "1.0.0",
+  "description": "构建成功之后上传至oss的umi-plugin",
+  "main": "lib/index.js",
+  "repository": "git@github.com:ahwgs/umi-plugin-alioss.git",
+  "author": "ahwgs <ah_wgs@126.com>",
+  "license": "MIT",
+  "scripts": {
+    "build": "tsc"
+  },
+  "keywords": [
+    "umi",
+    "umijs",
+    "plugin",
+    "alioss"
+  ],
+  "files": [
+    "lib"
+  ],
+  "peerDependencies": {
+    "umi": "2.x"
+  },
+  "devDependencies": {
+    "tslib": "^2.0.0",
+    "umi-plugin-types": "^0.3.2"
+  },
+  "dependencies": {
+    "ali-oss": "^6.8.0"
+  }
+}
