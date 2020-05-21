@@ -2,6 +2,8 @@
 
 umi,umi-plugin,alioss
 
+基于 umi2.x 插件体系编写
+
 ### 说明
 
 基于`umi-plugin`系统封装的一个插件，用于构建成功之后上传静态资源到阿里云
@@ -9,7 +11,8 @@ umi,umi-plugin,alioss
 ### 使用
 
 ```bash
-yarn add umi-plugin-alioss
+yarn add umi-plugin-alioss -D
+yarn add ali-oss -D
 ```
 
 在`.umirc.js`或者`config/config.js`中使用

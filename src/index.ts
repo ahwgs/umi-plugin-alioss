@@ -33,8 +33,6 @@ export interface PluginOptions {
   ignoreHtml: boolean; // 不上传html
 }
 
-const { readdirSync, statSync } = fs;
-
 /**
  * 上传的文件集合
  */
@@ -78,10 +76,10 @@ function filterFile(filePath: string, options: PluginOptions) {
  * @param {*} fPath 构建完成之后的文件夹
  */
 function readDirSync(fPath: string, option: PluginOptions) {
-  const allFiles = readdirSync(fPath);
+  const allFiles = fs.readdirSync(fPath);
   allFiles.forEach((item: any) => {
     const filePath = `${fPath}/${item}`;
-    const info = statSync(filePath);
+    const info = fs.statSync(filePath);
     if (info.isDirectory()) {
       readDirSync(filePath, option);
     } else if (filterFile(filePath, option)) {
