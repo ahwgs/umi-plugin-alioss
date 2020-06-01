@@ -10,8 +10,8 @@ import { IApi } from 'umi-plugin-types';
  * OSS配置
  */
 export interface OssConfig {
-    region: string /**区域 */;
-    bucket: string /**桶名 */;
+    region: string /** 区域 */;
+    bucket: string /** 桶名 */;
     secure: boolean;
 }
 /**
@@ -19,7 +19,7 @@ export interface OssConfig {
  */
 export interface PluginOptions {
     ossConfig: OssConfig;
-    configName?: string /**配置文件名称 */;
+    configName?: string /** 配置文件名称 */;
     enabled: boolean;
     cdnPrefix?: string;
     uploadPath: string;

@@ -1,6 +1,6 @@
 {
   "name": "umi-plugin-alioss",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "构建成功之后上传至oss的umi-plugin",
   "main": "lib/index.js",
   "types": "lib/index.d.ts",

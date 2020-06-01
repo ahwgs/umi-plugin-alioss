@@ -52,3 +52,7 @@ accessKeySecret=12312312312313
 `windows`用户在`C:/User/admin/.alioss`
 
 注意：在服务器环境中需要给该文件设置读取权限比如：`chmod 600 .alioss`
+
+### 1.0.2 更新
+
+为了兼容`umi3.x`代码有些许改动

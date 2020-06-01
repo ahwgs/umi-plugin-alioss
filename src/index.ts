@@ -15,8 +15,8 @@ const os = require('os');
  * OSS配置
  */
 export interface OssConfig {
-  region: string /**区域 */;
-  bucket: string /**桶名 */;
+  region: string /** 区域 */;
+  bucket: string /** 桶名 */;
   secure: boolean;
 }
 
@@ -25,7 +25,7 @@ export interface OssConfig {
  */
 export interface PluginOptions {
   ossConfig: OssConfig;
-  configName?: string /**配置文件名称 */;
+  configName?: string /** 配置文件名称 */;
   enabled: boolean; // 是否开启CDN上传
   cdnPrefix?: string; // CDN前缀
   uploadPath: string; // 文件上传路径
@@ -51,6 +51,25 @@ function isWindows() {
  */
 function line() {
   return isWindows() ? '\r\n' : '\n';
+}
+
+/**
+ * 是否是umi3.x
+ */
+function isUmi3() {
+  const version = process.env.UMI_VERSION;
+  return version.split('.')[0] === '3';
+}
+const isUmi3v = isUmi3();
+
+/**
+ * 日志打印兼容umi3.x
+ */
+function logPrint(msg: string, key: any, api: IApi) {
+  // @ts-ignore
+  if (!api.log && isUmi3v) return api.logger[key] ? api.logger[key](msg) : api.logger.log(msg);
+  // @ts-ignore
+  return api.log[key] ? api.log[key](msg) : api.log.log(msg);
 }
 
 /**
@@ -110,7 +129,7 @@ function loadConfig(filePath: string, api: IApi) {
     });
     return result;
   } catch (err) {
-    api.log.error(`${filePath}不是一个正确的路径或文件`);
+    logPrint(`${filePath}不是一个正确的路径或文件`, 'error', api);
     return false;
   }
 }
@@ -130,9 +149,9 @@ async function uploadFile(fils: any, ossConfig: OssConfig, options: PluginOption
     const result = await ossClient.put(`${file}`.replace(absOutputPath, uploadPath), file);
     const { name, url } = result;
     if (cdnPrefix) {
-      api.log.complete(`上传成功 => ${cdnPrefix}${name}`);
+      logPrint(`上传成功 => ${cdnPrefix}${name}`, 'info', api);
     } else {
-      api.log.complete(`上传成功 => ${url}`);
+      logPrint(`上传成功 => ${url}`, 'info', api);
     }
   }
   return new Promise((resolve) => resolve(Date.now() - globalStartTime));
@@ -153,50 +172,71 @@ const defaultOptions = {
 };
 
 export default function (api: IApi, opts: PluginOptions) {
-  const options = { ...defaultOptions, ...opts };
+  console.log('UMI_VERSION', process.env.UMI_VERSION);
+  let umi3Config = {};
+  if (isUmi3v) {
+    // umi3.x注册插件及变量
+    //@ts-ignore
+    api.describe &&
+      //@ts-ignore
+      api.describe({
+        key: 'alioss',
+        config: {
+          schema(joi: { object: () => any }) {
+            return joi.object();
+          },
+        },
+      });
+    //@ts-ignore
+    umi3Config = api.userConfig.alioss;
+  }
+
+  const options = { ...defaultOptions, ...opts, ...umi3Config };
   const { ossConfig, uploadPath, enabled, configName } = options;
   const isDev = process.env.NODE_ENV === 'development';
   const { paths } = api;
-  const { absOutputPath, cwd } = paths;
+  const { absOutputPath } = paths;
   if (!isDev && enabled) {
     const aliossConfigPath = path.join(`${os.homedir()}/${configName}`);
-    api.log.info(`😊 当前配置文件路径${aliossConfigPath}`);
+    logPrint(`😊 当前配置文件路径${aliossConfigPath}`, 'info', api);
     const ossSecret: any = loadConfig(aliossConfigPath, api);
     if (!ossSecret) {
-      api.log.error(`🍉 请正确配置${configName}文件\n`);
+      logPrint(`🍉 请正确配置${configName}文件\n`, 'error', api);
       return process.exit(-1);
     }
-    console.log('ossSecret', ossSecret);
     if (!ossSecret.accessKeyId) {
-      api.log.error('🍉 请正确配置accessKeyId\n');
+      logPrint('🍉 请正确配置accessKeyId\n', 'error', api);
       return process.exit(-1);
     }
     if (!ossSecret.accessKeySecret) {
-      api.log.error('🍉 请正确配置accessKeySecret\n');
+      logPrint('🍉 请正确配置accessKeySecret\n', 'error', api);
       return process.exit(-1);
     }
     if (!uploadPath) {
-      api.log.error('🍉 请正确配置的uploadPath\n');
+      logPrint('🍉 请正确配置的uploadPath\n', 'error', api);
       return process.exit(-1);
     }
     const newOssConfig = { ...ossConfig, ...ossSecret };
-    api.onBuildSuccess(() => {
-      api.log.info('🤗 应用构建完成 准备上传至OSS\n');
-      readDirSync(absOutputPath, options);
-      api.log.info(`⏰ 待上传文件总数：${uploadFiles.length}\n`);
-      if (uploadFiles.length === 0) {
-        return api.log.error('🍉 没有需要上传的文件\n');
-      }
-      (async function () {
-        try {
-          const res: any = await uploadFile(uploadFiles, newOssConfig, options, api);
-          api.log.log('');
-          api.log.success(`🎉 上传文件耗时： ${res / 1000}s\n`);
-          api.log.success(`🎉 已上传文件数： ${uploadFiles.length}\n`);
-        } catch (e) {
-          return api.log.error(`${e}\n`);
+    const buildFucKey = isUmi3v ? 'onBuildComplete' : 'onBuildSuccess';
+    //@ts-ignore
+    api[buildFucKey] &&
+      //@ts-ignore
+      api[buildFucKey](() => {
+        logPrint('🤗 应用构建完成 准备上传至OSS\n', 'info', api);
+        readDirSync(absOutputPath, options);
+        logPrint(`⏰ 待上传文件总数：${uploadFiles.length}\n`, 'info', api);
+        if (uploadFiles.length === 0) {
+          return logPrint('🍉 没有需要上传的文件\n', 'error', api);
         }
-      })();
-    });
+        (async function () {
+          try {
+            const res: any = await uploadFile(uploadFiles, newOssConfig, options, api);
+            logPrint(`🎉 上传文件耗时： ${res / 1000}s\n`, 'profile', api);
+            logPrint(`🎉 已上传文件数： ${uploadFiles.length}\n`, 'profile', api);
+          } catch (e) {
+            return logPrint(`${e}\n`, 'error', api);
+          }
+        })();
+      });
   }
 }
