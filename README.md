@@ -56,3 +56,41 @@ accessKeySecret=12312312312313
 ### 1.0.2 更新
 
 为了兼容`umi3.x`代码有些许改动
+
+在`umi3.x`中的插件配置和2.x有一些不同，上诉的配置方法不适用，在3.x中可以：
+```javascript
+// config文件
+import { defineConfig } from 'umi';
+
+export default defineConfig({
+  hash: true,
+  antd: {
+    dark: true,
+  },
+  dva: {
+    hmr: true,
+  },
+  ...,
+  alioss: {
+    ossConfig: {
+      buildPath: 'dist/**',
+      ...,
+    },
+    uploadPath: '/',
+  },
+});
+
+```
+
+### 常见错误
+
+`The request signature we calculated does not match the signature you provided. Check your key and signing method.`
+
+可以参考[这里](https://www.manongdao.com/article-2006237.html)
+（貌似是要翻Q）
+
+---
+
+`The OSS Access Key Id you provided does not exist in our records`
+
+检查上述的`.alioss`，文件中`accessKeySecret=`和`accessKeyId=`后的值不要加上`''` `""` 或者其他符号
